@@ -16,3 +16,14 @@ load helpers
 	upack -o $BATS_TMPDIR/test2.deb -H Name:Test
 	ar t $BATS_TMPDIR/test2.deb | grep control.tar.gz
 }
+
+@test "simple empty package contains a control file with the package name" {
+	upack -o $BATS_TMPDIR/test3.deb -H Name:Test
+	read_control_from $BATS_TMPDIR/test3.deb | grep Name
+}
+
+@test "simple empty package contains a control file with the package name 'alpha beta gamma'" {
+	# this is just for testing string parsing. Spaces are not allowed in package names, though.
+	upack -o $BATS_TMPDIR/test3.deb -H Name:\ \ \ alpha\ beta\ gamma\ \ 
+	read_control_from $BATS_TMPDIR/test3.deb | grep "Name: alpha beta gamma"
+}

@@ -51,12 +51,12 @@ ar_header() {
 }
 
 ar_file_header() {
-	FILENAME=$1
-	TIMESTAMP=$2
-	UID=$3
-	GID=$4
-	MODE=$5
-	SIZE=$6
+	local FILENAME=$1
+	local TIMESTAMP=$2
+	local UID=$3
+	local GID=$4
+	local MODE=$5
+	local SIZE=$6
 
 	printf '%-16s%-12s%-6s%-6s%-8s%-10s`\n' $@
 }
@@ -88,6 +88,13 @@ deb_ctrl_set_control() {
 	printf '%s: %s\n' "$1" "$2" >> $BUILD_DIR/control/control
 }
 
+deb_ctrl_set_control_unfiltered() {
+	local OPT=$1
+	local KEY=${OPT%:*}
+	local VAL=${OPT##*:}
+
+}
+
 # }}}
 
 # {{{ deb: data.tar.gz
@@ -117,6 +124,7 @@ while true; do
 			shift 2
 			;;
 		-H|--header)
+			OPT=$2
 			KEY=$2
 			VALUE=$3
 			deb_ctrl_set_control "$2" "$3"
