@@ -2,7 +2,5 @@ language: bash
 
 install:
   - git clone https://github.com/sstephenson/bats.git
-  - cd bats
-  - ./install.sh /usr/local
 
-script: bats test
+script: bats/bats test
