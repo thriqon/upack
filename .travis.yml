@@ -1,8 +1,8 @@
 language: bash
 
 install:
-  - git clone https://github.com/sstephenson/bats.git
-  - mkdir ~/bats
-  - cd bats && ./install.sh ~/bats
+  - mkdir ~/bats ~/prefix 
+  - git clone https://github.com/sstephenson/bats.git ~/bats
+  - cd ~/bats && ./install.sh ~/prefix
 
-script: ~/bats/bin/bats test
+script: ~/prefix/bin/bats test
