@@ -3,6 +3,6 @@ language: bash
 install:
   - mkdir ~/bats ~/prefix 
   - git clone https://github.com/sstephenson/bats.git ~/bats
-  - cd ~/bats && ./install.sh ~/prefix
+  - ~/bats/install.sh ~/prefix
 
 script: ~/prefix/bin/bats test
