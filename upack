@@ -1,0 +1,149 @@
+#!/bin/dash
+
+set -e
+
+UPACK_VERSION=v0.1.0
+
+# {{{ assert current version of getopt
+getopt -T || test $? -eq 4 || {
+	echo "Need current version of getopt"
+	exit 4
+}
+# }}}
+
+# {{{ temporary work directory
+BUILD_DIR=$(mktemp --directory --tmpdir upack.tmp.XXXXXXXXXX)
+trap "rm -rf $BUILD_DIR" EXIT
+# }}}
+
+# {{{ informational output
+print_usage() {
+	echo "upack - Simple and fast packaging for Debian systems"
+	echo
+	echo "Usage:"
+	echo
+	printf "\tupack\n"
+	printf "\t\t-o, --output              write resulting package to the given file, or stdout, if -\n"
+	printf "\t\t-h, --help                show this help and exit\n"
+	printf "\t\t-v, --version             show the version upack and exit\n"
+	echo
+	printf "\tPACKAGE CONTROL\n"
+	printf "\t\t-n, --name NAME           Set the package name to NAME\n"
+	printf "\t\t-H, --header FIELD:VALUE  Set field FIELD in the control file to VALUE\n"
+	echo
+	printf "Mandatory arguments for long options are mandatory for their\n"
+	printf "abbreviations, too.\n"
+	echo
+	printf "To report a bug please visit <https://upack.jonasw.de>\n"
+}
+
+print_version() {
+	echo "upack $UPACK_VERSION"
+	echo "Copyright (C) 2017 Jonas Weber"
+	echo "This is free software; see the source for copyright conditions."
+	echo
+}
+# }}}
+
+# {{{ 'ar' file creation
+ar_header() {
+	echo "!<arch>"
+}
+
+ar_file_header() {
+	FILENAME=$1
+	TIMESTAMP=$2
+	UID=$3
+	GID=$4
+	MODE=$5
+	SIZE=$6
+
+	printf '%-16s%-12s%-6s%-6s%-8s%-10s`\n' $@
+}
+
+ar_file_pipe() {
+	bytes=$(tee /dev/fd/2 | wc -c) 2>&1
+	if [ $(( $bytes % 2 )) -ne 0 ]; then
+		printf "\n"
+	fi
+}
+# }}}
+
+# {{{ deb: debian-binary
+deb_print_debian_binary() {
+	ar_file_header debian-binary $TIMESTAMP 0 0 100644 4
+	echo "2.0" | ar_file_pipe
+}
+# }}}
+
+# {{{ deb: control.tar.gz
+deb_ctrl_print_file() {
+	tar caf $BUILD_DIR/control.tar.gz -C $BUILD_DIR/control .
+	ar_file_header control.tar.gz $TIMESTAMP 0 0 100644 $(stat -c %s $BUILD_DIR/control.tar.gz)
+	cat $BUILD_DIR/control.tar.gz | ar_file_pipe
+}
+
+deb_ctrl_set_control() {
+	mkdir -p $BUILD_DIR/control
+	printf '%s: %s\n' "$1" "$2" >> $BUILD_DIR/control/control
+}
+
+# }}}
+
+# {{{ deb: data.tar.gz
+
+# }}}
+
+# {{{ argument handling
+eval set -- $(getopt -o hvo:H: --longoptions help,version,output:,header: -n upack -- $@)
+while true; do
+	case "$1" in
+		-h|--help)
+			shift
+			print_usage
+			exit 0
+			;;
+		-v|--version)
+			shift
+			print_version
+			exit 0
+			;;
+		-o|--output)
+			if [ "x$2" = "x-" ]; then
+				OUTPUT_FILE=/dev/stdout
+			else
+				OUTPUT_FILE=$2
+			fi
+			shift 2
+			;;
+		-H|--header)
+			KEY=$2
+			VALUE=$3
+			deb_ctrl_set_control "$2" "$3"
+			shift 2
+			;;
+		--)
+			shift ; break ;;
+		*)
+			print_usage
+			exit 1
+			;;
+	esac
+done
+
+if [ "x$OUTPUT_FILE" = "x" ]; then
+	echo "upack: -o or --output is required"
+	echo "Run upack -h for help"
+	exit 1
+fi
+
+TIMESTAMP=$(date +%s)
+
+(
+	ar_header
+	deb_print_debian_binary
+	deb_ctrl_print_file
+
+) | cat >$OUTPUT_FILE
+
+#}}}

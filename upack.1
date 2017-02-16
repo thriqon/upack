@@ -1,0 +1,28 @@
+.TH UPACK 1 2017
+.SH NAME
+upack \- Simple and fast packaging for Debian systems
+.SH SYNOPSIS
+.B upack
+\fB-o
+.SH HEADERS
+Debian documents the following header fields:
+.SH EXAMPLES
+The official \fBupack\fR package is built using the following command:
+.RS
+upack -o upack-1.0.0.deb \\
+	-n upack \\
+	-H Version:1.0.0 \\
+	-H "Maintainer: Jonas Weber <contact@jonasw.de>" \\
+	-H "Description: Simple and fast packaging for Debian systems" \\
+	-H Depends:dash \\
+	-F upack=/usr/bin/upack \\
+	-F upack.1.gz=/usr/share/upack.1.gz
+.RE
+.SH AUTHOR
+Written by Jonas Weber.
+.SH REPORTING BUGS
+Send an email to <bugs@jonasw.de>.
+.SH COPYRIGHT
+Copyright © 2017 Jonas Weber. License: ISC <https://opensource.org/licenses/ISC>.
+This is free software; you are free to change and redistribute it. There is NO
+WARRANTY, to the extent permitted by law.
