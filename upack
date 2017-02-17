@@ -45,6 +45,15 @@ print_version() {
 }
 # }}}
 
+# {{{ utils
+trim() {
+	local var="$*"
+	var="${var#"${var%%[![:space:]]*}"}"   # remove leading whitespace characters
+	var="${var%"${var##*[![:space:]]}"}"   # remove trailing whitespace characters
+	echo -n "$var"
+}
+# }}}
+
 # {{{ 'ar' file creation
 ar_header() {
 	echo "!<arch>"
@@ -90,9 +99,10 @@ deb_ctrl_set_control() {
 
 deb_ctrl_set_control_unfiltered() {
 	local OPT=$1
-	local KEY=${OPT%:*}
-	local VAL=${OPT##*:}
+	local KEY=$(trim "${OPT%:*}")
+	local VAL=$(trim "${OPT##*:}")
 
+	deb_ctrl_set_control "$KEY" "$VAL"
 }
 
 # }}}
@@ -124,10 +134,8 @@ while true; do
 			shift 2
 			;;
 		-H|--header)
-			OPT=$2
-			KEY=$2
-			VALUE=$3
-			deb_ctrl_set_control "$2" "$3"
+			local OPT=$2
+			deb_ctrl_set_control_unfiltered "$OPT"
 			shift 2
 			;;
 		--)
