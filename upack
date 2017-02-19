@@ -98,9 +98,9 @@ deb_ctrl_set_control() {
 }
 
 deb_ctrl_set_control_unfiltered() {
-	local OPT=$1
-	local KEY=$(trim "${OPT%:*}")
-	local VAL=$(trim "${OPT##*:}")
+	local OPT="$1"
+	local KEY="$(trim "${OPT%:*}")"
+	local VAL="$(trim "${OPT##*:}")"
 
 	deb_ctrl_set_control "$KEY" "$VAL"
 }
@@ -112,7 +112,7 @@ deb_ctrl_set_control_unfiltered() {
 # }}}
 
 # {{{ argument handling
-eval set -- $(getopt -o hvo:H: --longoptions help,version,output:,header: -n upack -- $@)
+eval set -- $(getopt -o hvo:H: --longoptions help,version,output:,header: -n upack -- "$@")
 while true; do
 	case "$1" in
 		-h|--help)
@@ -134,8 +134,7 @@ while true; do
 			shift 2
 			;;
 		-H|--header)
-			local OPT=$2
-			deb_ctrl_set_control_unfiltered "$OPT"
+			deb_ctrl_set_control_unfiltered "$2"
 			shift 2
 			;;
 		--)
