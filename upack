@@ -30,6 +30,7 @@ print_usage() {
 	printf "\tPACKAGE CONTROL\n"
 	printf "\t\t-n, --name NAME           Set the package name to NAME\n"
 	printf "\t\t-H, --header FIELD:VALUE  Set field FIELD in the control file to VALUE\n"
+	printf "\t\t-D, --depends-on PACKSPEC Shortcut to add a dependency to the control file. See docs for details.\n"
 	echo
 	printf "Mandatory arguments for long options are mandatory for their\n"
 	printf "abbreviations, too.\n"
@@ -112,7 +113,7 @@ deb_ctrl_set_control_unfiltered() {
 # }}}
 
 # {{{ argument handling
-eval set -- $(getopt -o hvo:H: --longoptions help,version,output:,header: -n upack -- "$@")
+eval set -- $(getopt -o hvo:H:D: --longoptions help,version,output:,header:,depends-on: -n upack -- "$@")
 while true; do
 	case "$1" in
 		-h|--help)
@@ -136,6 +137,9 @@ while true; do
 		-H|--header)
 			deb_ctrl_set_control_unfiltered "$2"
 			shift 2
+			;;
+		-D|--depends-on)
+			shift 1
 			;;
 		--)
 			shift ; break ;;
