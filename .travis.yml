@@ -1,10 +1,17 @@
 language: bash
 
+sudo: false
+env: MODE=test
+
+matrix:
+  include:
+    - sudo: required
+      env: MODE=integration-test
+      services: [docker]
+
 install:
   - mkdir ~/bats ~/prefix 
   - git clone https://github.com/sstephenson/bats.git ~/bats
   - ~/bats/install.sh ~/prefix
 
-script:
-  - ~/prefix/bin/bats test
-  - ./scripts/package_self.sh
+script: ~/prefix/bin/bats $MODE

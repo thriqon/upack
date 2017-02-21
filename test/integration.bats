@@ -27,3 +27,34 @@ load helpers
 	upack -o $BATS_TMPDIR/test3.deb -H "Name:   alpha beta gamma  "
 	read_control_from $BATS_TMPDIR/test3.deb | grep "Name: alpha beta gamma"
 }
+
+@test "simple package with a test file contains checksum for that file" {
+	echo "hello" > $BATS_TMPDIR/hello.txt
+	EXPECTED_SUM=$(echo "hello" | md5sum - | awk '{print $1}')
+
+	upack -o $BATS_TMPDIR/test4.deb -HName:hello $BATS_TMPDIR/hello.txt:/usr/share/messages/hello
+
+	ar p $BATS_TMPDIR/test4.deb control.tar.gz > $BATS_TMPDIR/control.tar.gz
+	cd $BATS_TMPDIR
+	tar xvf control.tar.gz md5sums
+
+	grep "/usr/share/messages/hello" md5sums
+	grep "$EXPECTED_SUM" md5sums
+}
+
+@test "simple package with a test file contains that file" {
+	echo "hello" > $BATS_TMPDIR/hello.txt
+	EXPECTED_SUM=$(echo "hello" | md5sum - | awk '{print $1}')
+
+	upack -o $BATS_TMPDIR/test4.deb -HName:hello $BATS_TMPDIR/hello.txt:/usr/share/messages/hello
+
+	ar p $BATS_TMPDIR/test4.deb data.tar.gz > $BATS_TMPDIR/data.tar.gz
+	cd $BATS_TMPDIR
+	tar xvf data.tar.gz
+
+	test -f ./usr/share/messages/hello
+}
+
+@test "package_self.sh works" {
+	../scripts/package_self.sh
+}

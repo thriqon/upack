@@ -12,7 +12,7 @@ getopt -T || test $? -eq 4 || {
 # }}}
 
 # {{{ temporary work directory
-BUILD_DIR=$(mktemp --directory --tmpdir upack.tmp.XXXXXXXXXX)
+BUILD_DIR=$(mktemp -d $TMPDIR/upack.tmp.XXXXXXXXXX)
 trap "rm -rf $BUILD_DIR" EXIT
 # }}}
 
@@ -61,13 +61,13 @@ ar_header() {
 }
 
 ar_file_header() {
-	local FILENAME=$1
-	local TIMESTAMP=$2
-	local UID=$3
-	local GID=$4
-	local MODE=$5
-	local SIZE=$6
-
+#	local FILENAME=$1
+#	local TIMESTAMP=$2
+#	local UID=$3
+#	local GID=$4
+#	local MODE=$5
+#	local SIZE=$6
+#
 	printf '%-16s%-12s%-6s%-6s%-8s%-10s`\n' $@
 }
 
@@ -109,6 +109,25 @@ deb_ctrl_set_control_unfiltered() {
 # }}}
 
 # {{{ deb: data.tar.gz
+TAR_COMMAND="tar caf $BUILD_DIR/data.tar.gz "
+data_package_mapping() {
+	local MAPPING="$1"
+	local SOURCE="${MAPPING%:*}"
+	local TARGET="${MAPPING##*:}"
+
+	TAR_COMMAND="$TAR_COMMAND --transform=s|^$SOURCE\$|$TARGET|Sr $SOURCE"
+	
+	mkdir -p $BUILD_DIR/control
+	echo "$(md5sum $SOURCE | awk '{print $1}' )  $TARGET" >> $BUILD_DIR/control/md5sums
+}
+
+data_print_file() {
+	echo "$TAR_COMMAND" 1>&2
+	$TAR_COMMAND
+
+	ar_file_header data.tar.gz $TIMESTAMP 0 0 100644 $(stat -c %s $BUILD_DIR/data.tar.gz)
+	cat $BUILD_DIR/data.tar.gz | ar_file_pipe
+}
 
 # }}}
 
@@ -139,7 +158,7 @@ while true; do
 			shift 2
 			;;
 		-D|--depends-on)
-			shift 1
+			shift 2
 			;;
 		--)
 			shift ; break ;;
@@ -158,11 +177,15 @@ fi
 
 TIMESTAMP=$(date +%s)
 
+for filemapping ; do
+	data_package_mapping "$filemapping"
+done
+
 (
 	ar_header
 	deb_print_debian_binary
 	deb_ctrl_print_file
-
+	data_print_file
 ) | cat >$OUTPUT_FILE
 
 #}}}
