@@ -36,7 +36,7 @@ load helpers
 
 	ar p $BATS_TMPDIR/test4.deb control.tar.gz > $BATS_TMPDIR/control.tar.gz
 	cd $BATS_TMPDIR
-	tar xvf control.tar.gz md5sums
+	tar xvf control.tar.gz ./md5sums
 
 	grep "/usr/share/messages/hello" md5sums
 	grep "$EXPECTED_SUM" md5sums
@@ -56,5 +56,5 @@ load helpers
 }
 
 @test "package_self.sh works" {
-	../scripts/package_self.sh
+	$BATS_TEST_DIRNAME/../scripts/package_self.sh
 }

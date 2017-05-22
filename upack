@@ -14,6 +14,8 @@ getopt -T || test $? -eq 4 || {
 # {{{ temporary work directory
 BUILD_DIR=$(mktemp -d $TMPDIR/upack.tmp.XXXXXXXXXX)
 trap "rm -rf $BUILD_DIR" EXIT
+
+mkdir -p $BUILD_DIR/data $BUILD_DIR/control
 # }}}
 
 # {{{ informational output
@@ -88,7 +90,8 @@ deb_print_debian_binary() {
 
 # {{{ deb: control.tar.gz
 deb_ctrl_print_file() {
-	tar caf $BUILD_DIR/control.tar.gz -C $BUILD_DIR/control .
+	tar --owner=root:0 --group=root:0 --create --gzip --file $BUILD_DIR/control.tar.gz -C $BUILD_DIR/control .
+
 	ar_file_header control.tar.gz $TIMESTAMP 0 0 100644 $(stat -c %s $BUILD_DIR/control.tar.gz)
 	cat $BUILD_DIR/control.tar.gz | ar_file_pipe
 }
@@ -109,21 +112,19 @@ deb_ctrl_set_control_unfiltered() {
 # }}}
 
 # {{{ deb: data.tar.gz
-TAR_COMMAND="tar caf $BUILD_DIR/data.tar.gz "
 data_package_mapping() {
 	local MAPPING="$1"
 	local SOURCE="${MAPPING%:*}"
 	local TARGET="${MAPPING##*:}"
 
-	TAR_COMMAND="$TAR_COMMAND --transform=s|^$SOURCE\$|$TARGET|Sr $SOURCE"
-	
 	mkdir -p $BUILD_DIR/control
 	echo "$(md5sum $SOURCE | awk '{print $1}' )  $TARGET" >> $BUILD_DIR/control/md5sums
+
+	install -D "$SOURCE" "$BUILD_DIR/data/$TARGET"
 }
 
 data_print_file() {
-	echo "$TAR_COMMAND" 1>&2
-	$TAR_COMMAND
+	tar --owner=root:0 --group=root:0 --create --gzip --file $BUILD_DIR/data.tar.gz -C $BUILD_DIR/data .
 
 	ar_file_header data.tar.gz $TIMESTAMP 0 0 100644 $(stat -c %s $BUILD_DIR/data.tar.gz)
 	cat $BUILD_DIR/data.tar.gz | ar_file_pipe
