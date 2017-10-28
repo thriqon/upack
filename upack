@@ -12,7 +12,7 @@ getopt -T || test $? -eq 4 || {
 # }}}
 
 # {{{ temporary work directory
-BUILD_DIR=$(mktemp -d $TMPDIR/upack.tmp.XXXXXXXXXX)
+BUILD_DIR=$(mktemp -d ${TMPDIR-/tmp}/upack.tmp.XXXXXXXXXX)
 trap "rm -rf $BUILD_DIR" EXIT
 
 mkdir -p $BUILD_DIR/data $BUILD_DIR/control
